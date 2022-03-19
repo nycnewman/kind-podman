@@ -46,9 +46,9 @@ kubectl apply -f dashboard-adminuser.yaml
 kubectl apply -f dashboard-clusterrolebinding.yaml
 
 # Metal LB
-kubectl apply -f metallb-namespace.yaml
-kubectl apply -f metallb.yaml
-kubectl apply -f metallb-config.yaml
+#kubectl apply -f metallb-namespace.yaml
+#kubectl apply -f metallb.yaml
+#kubectl apply -f metallb-config.yaml
 
 kubectl proxy &
 

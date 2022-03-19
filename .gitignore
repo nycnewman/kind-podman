@@ -15,3 +15,5 @@ cosign.*
 distroless.key
 .idea
 kind-podman.iml
+kubectl-calico
+rekor-cli-darwin-arm64
