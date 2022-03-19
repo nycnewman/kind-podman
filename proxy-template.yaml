@@ -1,0 +1,76 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: httpbin
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: httpbin-config
+data:
+  default.conf: |
+    upstream node {
+      server test-service;
+    }
+    server {
+      listen                  80;
+      server_name             _;
+      root                    /usr/share/nginx/html;
+      location / {
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        # CHANGE ME
+        proxy_set_header Host test-service;
+        proxy_pass http://node;
+        proxy_redirect off;
+        port_in_redirect off;
+      }
+    }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: httpbin
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: httpbin
+      version: v1
+  template:
+    metadata:
+      labels:
+        app: httpbin
+        version: v1
+    spec:
+      serviceAccountName: httpbin
+      containers:
+        - image: nginx:stable-alpine
+          imagePullPolicy: IfNotPresent
+          name: httpbin
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - name: httpbin-configs
+              mountPath: /etc/nginx/conf.d
+      # Load the configuration files for nginx
+      volumes:
+        - name: httpbin-configs
+          configMap:
+            name: httpbin-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: httpbin
+  labels:
+    app: httpbin
+    service: httpbin
+spec:
+  ports:
+    - name: http
+      port: 8000
+      targetPort: 80
+  selector:
+    app: httpbin
+  #type: NodePort
