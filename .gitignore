@@ -13,3 +13,5 @@ config.json
 istio-1.13.2
 cosign.*
 distroless.key
+.idea
+kind-podman.iml
