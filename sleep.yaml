@@ -58,14 +58,9 @@ spec:
         volumeMounts:
         - mountPath: /etc/sleep/tls
           name: secret-volume
-        - name: data
-          mountPath: /var/data
       volumes:
       - name: secret-volume
         secret:
           secretName: sleep-secret
           optional: true
-      - name: data
-        persistentVolumeClaim:
-          claimName: pvc-data
 ---

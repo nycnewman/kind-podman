@@ -36,3 +36,8 @@ kubectl get pods -A
 kubectl exec -it multitool-598c869c8d-m6ps7 /bin/bash
 
 ```
+
+# Performance Testing
+
+siege -r 10 -c 4 -v -d 1 -H "Host:httpbin.example.com" http://localhost:8080/status/234
+fortio load -c 2 -n 400 -H "Host:httpbin.example.com" -loglevel Warning -stdclient http://localhost:8080/status/234

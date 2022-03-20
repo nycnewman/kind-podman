@@ -1,14 +1,14 @@
 #!/bin/bash
 
 set -e
-#export KIND_EXPERIMENTAL_PROVIDER=podman
+export KIND_EXPERIMENTAL_PROVIDER=podman
 
 kind create cluster --config=kind-cluster.yaml
 
 sleep 8
 
 # PV Claims
-kubectl apply -f pv-claims.yaml
+#kubectl apply -f pv-claims.yaml
 
 # Install Calico
 kubectl create -f tigera-operator.yaml
@@ -16,8 +16,8 @@ kubectl apply -f ./calico-config.yaml
 
 sleep 40
 
-#kubectl describe tigerastatus calico
-#kubectl get pods -n calico-system
+kubectl describe tigerastatus calico
+kubectl get pods -n calico-system
 
 #kubectl -n kube-system rollout restart deployment coredns
 #kubectl scale deployment --replicas 1 coredns --namespace kube-system

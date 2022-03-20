@@ -1,6 +1,6 @@
 #!/bin/bash
 
-podman stop
-podman rm
+podman machine stop
+podman machine rm --force
 
 
