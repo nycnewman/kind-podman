@@ -5,24 +5,35 @@ export KIND_EXPERIMENTAL_PROVIDER=podman
 
 kind create cluster --config=kind-cluster.yaml
 
+PODS=`podman ps | grep -v NAMES | cut -d ' ' -f 1`
+IFS=$'\n' PODS=($PODS)
+
+for i in "${PODS[@]}"
+do
+   :
+   # do whatever on "$i" here
+   podman cp config.json $i:/var/lib/kubelet/config.json
+done
+
 sleep 8
 
-# PV Claims
-#kubectl apply -f pv-claims.yaml
-
 # Install Calico
-kubectl create -f tigera-operator.yaml
-kubectl apply -f ./calico-config.yaml
+#kubectl create -f tigera-operator.yaml
+#kubectl apply -f ./calico-config.yaml
 
 sleep 40
 
-kubectl describe tigerastatus calico
-kubectl get pods -n calico-system
+#kubectl describe tigerastatus calico
+#kubectl get pods -n calico-system
 
 #kubectl -n kube-system rollout restart deployment coredns
 #kubectl scale deployment --replicas 1 coredns --namespace kube-system
 
-kubectl get all -A
+#kubectl get all -A
+
+# Following needed in multi nodes configurations to allow istio-ingressgateway to start
+#kubectl taint nodes --all node-role.kubernetes.io/master-
+kubectl label node kind-worker ingress-ready=true
 
 # Install Istio
 istioctl x precheck

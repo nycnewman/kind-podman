@@ -1,0 +1,224 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mysql-server-config
+  namespace: pii-demo
+  labels:
+    app: mysql-server
+data:
+  my.cnf: |
+    [mysqld]
+    bind_address = 0.0.0.0
+    skip_name_resolve
+    skip_log_bin
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mysql-initdb-config
+  namespace: pii-demo
+  labels:
+    app: mysql-server
+data:
+  initdb.sql: |
+    CREATE TABLE users (id INT(11) UNSIGNED AUTO_INCREMENT PRIMARY KEY, firstname VARCHAR(30) NOT NULL,	lastname VARCHAR(30) NOT NULL, email VARCHAR(50) NOT NULL, age INT(3), location VARCHAR(50), date TIMESTAMP);
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: mysql-credentials
+  namespace: pii-demo
+  labels:
+    app: mysql-server
+type: Opaque
+data:
+  mysql_root_password: Rm1qdWYzdVV6OWc4dFQyVGFDcHlSYTNuQTZWOQ==
+  mysql_database: ZW1wbG95ZWVzCg==
+  mysql_user: cGlpX3VzZXI=
+  mysql_password: Rm1qdWYzdVV6OWc4dFQyVGFDcHlSYTNuQTZWOQ==
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysql-server
+  namespace: pii-demo
+  labels:
+    app: mysql-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mysql-server
+  template:
+    metadata:
+      name: mysql-server
+      labels:
+        app: mysql-server
+    spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app
+                operator: In
+                values:
+                - mysql-server
+            topologyKey: "kubernetes.io/hostname"
+      containers:
+        - name: mysql-server
+          image: mysql:8.0.28-oracle
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-credentials
+                  key: mysql_root_password
+            - name: MYSQL_USER
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-credentials
+                  key: mysql_user
+            - name: MYSQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-credentials
+                  key: mysql_password
+            - name: MYSQL_DATABASE
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-credentials
+                  key: mysql_database
+          livenessProbe:
+            tcpSocket:
+              port: 3306
+          ports:
+            - containerPort: 3306
+              name: mysql
+          resources:
+            limits:
+              memory: "512Mi"
+              cpu: "200m"
+            requests: 
+              memory: "64Mi"
+              cpu: "10m"
+          volumeMounts:
+            - name: mysql-datadir
+              mountPath: /var/lib/mysql
+            - name: mysql-server-config
+              mountPath: /etc/mysql/conf.d/my.cnf
+              subPath: my.cnf
+              readOnly: true
+            - name: mysql-initdb
+              mountPath: /docker-entrypoint-initdb.d
+      terminationGracePeriodSeconds: 60
+      volumes:
+        - name: mysql-datadir
+          emptyDir: {}
+        - name: mysql-server-config
+          configMap:
+            name: mysql-server-config
+        - name: mysql-initdb
+          configMap:
+            name: mysql-initdb-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql-server
+  namespace: pii-demo
+  labels:
+    app: mysql-server
+spec:
+  selector:
+    app: mysql-server
+  ports:
+    - port: 3306
+      targetPort: 3306
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: httpd-server
+  namespace: pii-demo
+  labels:
+    app: httpd-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: httpd-server
+  template:
+    metadata:
+      name: httpd-server
+      labels:
+        app: httpd-server
+    spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app
+                operator: In
+                values:
+                - httpd-server
+            topologyKey: "kubernetes.io/hostname"
+      containers:
+        - name: httpd-server
+          image: nycnewman/web-frontend:0.1
+          imagePullPolicy: Always
+          env:
+            - name: MYSQL_USER
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-credentials
+                  key: mysql_user
+            - name: MYSQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-credentials
+                  key: mysql_password
+            - name: MYSQL_DATABASE
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-credentials
+                  key: mysql_database
+            - name: MYSQL_HOST
+              value: "mysql-server"
+            - name: MYSQL_PORT
+              value: "3306"
+            - name: DATABASE
+              value: "mysql"
+          livenessProbe:
+            tcpSocket:
+              port: 10001
+          ports:
+            - containerPort: 10001
+              name: httpd
+          resources:
+            limits:
+              memory: "128Mi"
+              cpu: "100m"
+            requests: 
+              memory: "64Mi"
+              cpu: "10m"
+      terminationGracePeriodSeconds: 60
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: httpd-server
+  namespace: pii-demo
+  labels:
+    app: httpd-server
+spec:
+  selector:
+    app: httpd-server
+  type: NodePort
+  ports:
+    - port: 10001
+      targetPort: 10001
+      nodePort: 30080

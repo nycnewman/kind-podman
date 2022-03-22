@@ -1,0 +1,19 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: http-healthcheck
+  namespace: pii-demo
+spec:
+  hosts:
+  - "http-healthcheck.example.com"
+  gateways:
+  - http-healthcheck-gateway
+  http:
+  - match:
+    - uri:
+        prefix: /
+    route:
+    - destination:
+        port:
+          number: 10001
+        host: httpd-server
