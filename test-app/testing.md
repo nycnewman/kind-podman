@@ -32,3 +32,5 @@ https://www.digitalocean.com/community/tutorials/how-to-create-a-new-user-and-gr
 ## Docker mysql 
 https://hub.docker.com/_/mysql
 
+# Docker, Python and Gunicorn
+https://testdriven.io/blog/dockerizing-flask-with-postgres-gunicorn-and-nginx/
