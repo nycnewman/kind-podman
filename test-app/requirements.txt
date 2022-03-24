@@ -1,4 +1,4 @@
-mysql-connector-python==8.0.28
+mariadb==1.0.10
 flask==2.0.3
 gunicorn==20.1.0
 

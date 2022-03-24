@@ -1,7 +1,7 @@
 from __future__ import print_function
-import mysql
-import mysql.connector
-from mysql.connector import errorcode
+import mariadb
+#import mysql.connector
+#from mysql.connector import errorcode
 
 import datetime
 
@@ -13,13 +13,14 @@ print(os.environ)
 mysql_user = os.environ.get('MYSQL_USER')
 mysql_password = os.environ.get('MYSQL_PASSWORD')
 mysql_database = os.environ.get('MYSQL_DATABASE')
-mysql_host = os.environ.get('MYSQL_HOST') + ":" + os.environ.get('MYSQL_PORT')
+mysql_host = os.environ.get('MYSQL_HOST')
+mysql_port = int(os.environ.get('MYSQL_PORT'))
 
 def create_database(cursor, dbname):
     try:
         cursor.execute(
             "CREATE DATABASE {} DEFAULT CHARACTER SET 'utf8'".format(dbname))
-    except mysql.connector.Error as err:
+    except mariadb.Error as err:
         print("Failed creating database: {}".format(err))
         exit(1)
 
@@ -28,20 +29,21 @@ def create_tables():
     cnx = None
 
     try:
-        cnx = mysql.connector.connect(user=mysql_user, password=mysql_password,
-                                   host=mysql_host
+        cnx = mariadb.connect(user=mysql_user, password=mysql_password,
+                                   host=mysql_host, port=mysql_port
                                    )
     #
-    except mysql.connector.Error as err:
-        if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-            response_text.append("Something is wrong with your user name or password")
-            return(response_text)
-        elif err.errno == errorcode.ER_BAD_DB_ERROR:
-            response_text.append("Database does not exist")
-            return(response_text)
-        else:
-            response_text.append("Unknown error occurred")
-            return(response_text)
+    except mariadb.Error as err:
+        print(err)
+        #if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
+        ##    response_text.append("Something is wrong with your user name or password")
+        #    return(response_text)
+        #elif err.errno == errorcode.ER_BAD_DB_ERROR:
+        #    response_text.append("Database does not exist")
+        #    return(response_text)
+        #else:
+        response_text.append("Unknown error occurred: {}".format(err))
+        return(response_text)
 
     if cnx == None:
         response_text.append("Something went wrong")
@@ -124,26 +126,27 @@ def create_tables():
 
     try:
         cursor.execute("USE {}".format(DB_NAME))
-    except mysql.connector.Error as err:
-        response_text.append("Database {} does not exists.".format(DB_NAME))
-        if err.errno == errorcode.ER_BAD_DB_ERROR:
-            create_database(cursor, DB_NAME)
-            response_text.append("Database {} created successfully.".format(DB_NAME))
-            cnx.database = DB_NAME
-        else:
-            response_text.append("Unknown error")
-            return(response_text)
+    except mariadb.Error as err:
+        response_text.append("Database {} does not exist. {}".format(DB_NAME, err))
+        #if err.errno == errorcode.ER_BAD_DB_ERROR:
+        #    create_database(cursor, DB_NAME)
+        #    response_text.append("Database {} created successfully.".format(DB_NAME))
+        #    cnx.database = DB_NAME
+        #else:
+        #    response_text.append("Unknown error")
+        #    return(response_text)
 
     for table_name in TABLES:
         table_description = TABLES[table_name]
         try:
             response_text.append("Creating table {}: ".format(table_name))
             cursor.execute(table_description)
-        except mysql.connector.Error as err:
-            if err.errno == errorcode.ER_TABLE_EXISTS_ERROR:
-                response_text.append("already exists.")
-            else:
-                response_text.append(err.msg)
+        except mariadb.Error as err:
+            response_text.append("Error creating table {}: {}".format(table_name, err))
+            #if err.errno == errorcode.ER_TABLE_EXISTS_ERROR:
+            #    response_text.append("already exists.")
+            #else:
+            #    response_text.append(err.msg)
         else:
             response_text.append("OK")
 
@@ -154,7 +157,7 @@ def create_tables():
 def insert_data():
      response_text = []
 
-     cnx = mysql.connector.connect(user=mysql_user, password=mysql_password,  host=mysql_host, database=mysql_database)
+     cnx = mariadb.connect(user=mysql_user, password=mysql_password,  host=mysql_host, port=mysql_port, database=mysql_database)
      cursor = cnx.cursor()
 
      tomorrow = datetime.datetime.now().date() + datetime.timedelta(days=1)
@@ -195,7 +198,7 @@ def insert_data():
 
 def select_data():
      response_text = []
-     cnx = mysql.connector.connect(user=mysql_user, password=mysql_password,  host=mysql_host, database=mysql_database)
+     cnx = mariadb.connect(user=mysql_user, password=mysql_password,  host=mysql_host, port=mysql_port, database=mysql_database)
      cursor = cnx.cursor()
 
      query = ("SELECT first_name, last_name, hire_date FROM employees "

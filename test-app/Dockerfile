@@ -14,7 +14,15 @@ ENV PYTHONUNBUFFERED 1
 
 # install system dependencies
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends gcc
+    apt-get install -y --no-install-recommends gcc wget curl libmariadb3 libmariadb-dev
+RUN wget https://downloads.mariadb.com/MariaDB/mariadb_repo_setup
+RUN echo "b9e90cde27affc2a44f9fc60e302ccfcacf71f4ae02071f30d570e6048c28597 mariadb_repo_setup" \
+    | sha256sum -c -
+RUN chmod +x mariadb_repo_setup
+RUN ./mariadb_repo_setup \
+   --mariadb-server-version="mariadb-10.6"
+RUN apt update
+RUN apt install -y mariadb-client
 
 # lint
 RUN pip install --upgrade pip
@@ -47,7 +55,15 @@ RUN mkdir $APP_HOME
 WORKDIR $APP_HOME
 
 # install dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends netcat
+RUN apt-get update && apt-get install -y --no-install-recommends netcat wget curl libmariadb3 libmariadb-dev
+RUN wget https://downloads.mariadb.com/MariaDB/mariadb_repo_setup
+RUN echo "b9e90cde27affc2a44f9fc60e302ccfcacf71f4ae02071f30d570e6048c28597 mariadb_repo_setup" \
+    | sha256sum -c -
+RUN chmod +x mariadb_repo_setup
+RUN ./mariadb_repo_setup \
+   --mariadb-server-version="mariadb-10.6"
+RUN apt update
+RUN apt install -y mariadb-client
 COPY --from=builder /usr/src/app/wheels /wheels
 COPY --from=builder /usr/src/app/requirements.txt .
 RUN pip install --upgrade pip

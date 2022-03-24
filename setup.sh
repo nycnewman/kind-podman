@@ -18,8 +18,8 @@ done
 sleep 8
 
 # Install Calico
-#kubectl create -f tigera-operator.yaml
-#kubectl apply -f ./calico-config.yaml
+kubectl create -f tigera-operator.yaml
+kubectl apply -f ./calico-config.yaml
 
 sleep 40
 
@@ -103,10 +103,6 @@ curl -s -I -HHost:httpbin.example.com http://localhost:8080/status/200
 curl -s -I -HHost:httpbin.example.com http://localhost:8080/test
 curl -s -I -HHost:httpbin.example.com http://localhost:8080/status/244
 curl -s -I -HHost:httpbin.example.com http://localhost:8080/delay/3
-
-# Install echoserver app
-#kind load docker-image echoserver:0.1
-#kubectl create -f echo-app.yaml
 
 #open http://localhost:8001/api/v1/namespaces/kubernetes-dashboard/services/https:kubernetes-dashboard:/proxy/
 istioctl dashboard kiali &

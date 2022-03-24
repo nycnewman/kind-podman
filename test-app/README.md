@@ -1,10 +1,16 @@
 # Test App
 Testing Istio in a cluster
+TODO:
+
 
 ```
 kubectl apply -f pii-demo.yaml
 ```
 
+```
+CREATE USER 'pii_user'@'%' IDENTIFIED BY 'Fmjuf3uUz9g8tT2TaCpyRa3nA6V9';
+GRANT CREATE, ALTER, DROP, INSERT, UPDATE, DELETE, SELECT, REFERENCES, RELOAD on *.* TO 'pii_user'@'%' WITH GRANT OPTION;
+```
 # Building Docker image
 ```
 podman build --arch="arm64/v8" -t nycnewman/web-frontend:0.1 .

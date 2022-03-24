@@ -21,8 +21,20 @@ metadata:
   labels:
     app: mysql-server
 data:
-  initdb.sql: |
-    CREATE TABLE users (id INT(11) UNSIGNED AUTO_INCREMENT PRIMARY KEY, firstname VARCHAR(30) NOT NULL,	lastname VARCHAR(30) NOT NULL, email VARCHAR(50) NOT NULL, age INT(3), location VARCHAR(50), date TIMESTAMP);
+  initdb.sh: |
+    #!/bin/sh
+    echo "** Creating default DB and users"
+    mysql -u root -p$MYSQL_ROOT_PASSWORD --execute \
+      "CREATE DATABASE IF NOT EXISTS $MYSQL_DATABASE;
+      GRANT CREATE, ALTER, DROP, INSERT, UPDATE, DELETE, SELECT, REFERENCES, RELOAD ON $MYSQL_DATABASE.* TO '$MYSQL_USER'@'%';
+      DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost', '127.0.0.1', '::1');"
+    echo "** Finished creating default DB and users"
+  #initdb.sql: |
+  #  CREATE DATABASE IF NOT EXISTS employees;
+  #  USE employees;
+  #  #CREATE USER 'pii_user'@'%' IDENTIFIED BY 'Fmjuf3uUz9g8tT2TaCpyRa3nA6V9';
+  #  #GRANT CREATE, ALTER, DROP, INSERT, UPDATE, DELETE, SELECT, REFERENCES, RELOAD on *.* TO 'pii_user'@'%' WITH GRANT OPTION;
+  #  #CREATE TABLE users (id INT(11) UNSIGNED AUTO_INCREMENT PRIMARY KEY, firstname VARCHAR(30) NOT NULL,	lastname VARCHAR(30) NOT NULL, email VARCHAR(50) NOT NULL, age INT(3), location VARCHAR(50), date TIMESTAMP);
 ---
 apiVersion: v1
 kind: Secret
@@ -34,9 +46,38 @@ metadata:
 type: Opaque
 data:
   mysql_root_password: Rm1qdWYzdVV6OWc4dFQyVGFDcHlSYTNuQTZWOQ==
-  mysql_database: ZW1wbG95ZWVzCg==
+  mysql_database: ZW1wbG95ZWVz
   mysql_user: cGlpX3VzZXI=
   mysql_password: Rm1qdWYzdVV6OWc4dFQyVGFDcHlSYTNuQTZWOQ==
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: mysql-pv-volume
+  namespace: pii-demo
+  labels:
+    type: local
+spec:
+  storageClassName: manual
+  capacity:
+    storage: 20Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/mnt/data"
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mysql-pv-claim
+  namespace: pii-demo
+spec:
+  storageClassName: manual
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 20Gi
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -68,35 +109,42 @@ spec:
             topologyKey: "kubernetes.io/hostname"
       containers:
         - name: mysql-server
-          image: mysql:8.0.28-oracle
+          image: mariadb:10.7.3-focal
           imagePullPolicy: IfNotPresent
           env:
-            - name: MYSQL_ROOT_PASSWORD
+            - name: MARIADB_ROOT_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: mysql-credentials
                   key: mysql_root_password
-            - name: MYSQL_USER
+            - name: MARIADB_USER
               valueFrom:
                 secretKeyRef:
                   name: mysql-credentials
                   key: mysql_user
-            - name: MYSQL_PASSWORD
+            - name: MARIADB_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: mysql-credentials
                   key: mysql_password
-            - name: MYSQL_DATABASE
+            - name: MARIADB_DATABASE
               valueFrom:
                 secretKeyRef:
                   name: mysql-credentials
                   key: mysql_database
-          livenessProbe:
-            tcpSocket:
-              port: 3306
           ports:
             - containerPort: 3306
               name: mysql
+          livenessProbe:
+            tcpSocket:
+              port: mysql
+            initialDelaySeconds: 3
+            periodSeconds: 3
+          startupProbe:
+            tcpSocket:
+              port: mysql
+            failureThreshold: 20
+            periodSeconds: 5
           resources:
             limits:
               memory: "512Mi"
@@ -116,7 +164,8 @@ spec:
       terminationGracePeriodSeconds: 60
       volumes:
         - name: mysql-datadir
-          emptyDir: {}
+          persistentVolumeClaim:
+            claimName: mysql-pv-claim
         - name: mysql-server-config
           configMap:
             name: mysql-server-config
@@ -168,7 +217,7 @@ spec:
             topologyKey: "kubernetes.io/hostname"
       containers:
         - name: httpd-server
-          image: nycnewman/web-frontend:0.1
+          image: nycnewman/web-frontend:0.3
           imagePullPolicy: Always
           env:
             - name: MYSQL_USER
