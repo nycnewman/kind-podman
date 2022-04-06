@@ -1,5 +1,5 @@
 
-# neuvector yaml version for 5.x.x on docker runtime
+# neuvector yaml version for 4.x.x on docker runtime, it will also work for 3.x.x
 apiVersion: v1
 kind: Service
 metadata:
@@ -44,7 +44,7 @@ spec:
     - port: 8443
       name: manager
       protocol: TCP
-  type: NodePort
+  type: LoadBalancer
   selector:
     app: neuvector-manager-pod
 
@@ -87,9 +87,12 @@ spec:
       labels:
         app: neuvector-manager-pod
     spec:
+      imagePullSecrets:
+        - name: regsecret
       containers:
         - name: neuvector-manager-pod
-          image: neuvector/manager.preview:5.0.0-preview.3
+          image: registry.neuvector.com/manager:4.4.4
+#          image: neuvector/manager:<version>
           env:
             - name: CTRL_SERVER_IP
               value: neuvector-svc-controller.neuvector
@@ -130,9 +133,12 @@ spec:
                   values:
                   - neuvector-controller-pod
               topologyKey: "kubernetes.io/hostname"
+      imagePullSecrets:
+        - name: regsecret
       containers:
         - name: neuvector-controller-pod
-          image: neuvector/controller.preview:5.0.0-preview.3
+          image: registry.neuvector.com/controller:4.4.4
+#          image: neuvector/controller:<version>
           securityContext:
             privileged: true
           readinessProbe:
@@ -177,7 +183,7 @@ spec:
             path: /var/neuvector
         - name: docker-sock
           hostPath:
-            path: /run/containerd/containerd.sock
+            path: /var/run/docker.sock
         - name: proc-vol
           hostPath:
             path: /proc
@@ -215,10 +221,13 @@ spec:
       tolerations:
         - effect: NoSchedule
           key: node-role.kubernetes.io/master
+      imagePullSecrets:
+        - name: regsecret
       hostPID: true
       containers:
         - name: neuvector-enforcer-pod
-          image: neuvector/enforcer.preview:5.0.0-preview.3
+          image: registry.neuvector.com/enforcer:4.4.4
+#          image: neuvector/enforcer:<version>
           securityContext:
             privileged: true
           env:
@@ -253,7 +262,7 @@ spec:
             path: /lib/modules
         - name: docker-sock
           hostPath:
-            path: /run/containerd/containerd.sock
+            path: /var/run/docker.sock
         - name: proc-vol
           hostPath:
             path: /proc
@@ -283,9 +292,12 @@ spec:
       labels:
         app: neuvector-scanner-pod
     spec:
+      imagePullSecrets:
+        - name: regsecret
       containers:
         - name: neuvector-scanner-pod
-          image: neuvector/scanner.preview:latest
+          image: registry.neuvector.com/scanner
+#          image: neuvector/scanner
           imagePullPolicy: Always
           env:
             - name: CLUSTER_JOIN_ADDR
@@ -308,9 +320,12 @@ spec:
           labels:
             app: neuvector-updater-pod
         spec:
+          imagePullSecrets:
+          - name: regsecret
           containers:
           - name: neuvector-updater-pod
-            image: neuvector/updater.preview:latest
+            image: registry.neuvector.com/updater
+#            image: neuvector/updater
             imagePullPolicy: Always
             lifecycle:
               postStart:

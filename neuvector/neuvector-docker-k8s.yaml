@@ -44,7 +44,7 @@ spec:
     - port: 8443
       name: manager
       protocol: TCP
-  type: NodePort
+  type: LoadBalancer
   selector:
     app: neuvector-manager-pod
 
@@ -89,7 +89,7 @@ spec:
     spec:
       containers:
         - name: neuvector-manager-pod
-          image: neuvector/manager.preview:5.0.0-preview.3
+          image: neuvector/manager.preview:5.0.0-preview.2
           env:
             - name: CTRL_SERVER_IP
               value: neuvector-svc-controller.neuvector
@@ -132,7 +132,7 @@ spec:
               topologyKey: "kubernetes.io/hostname"
       containers:
         - name: neuvector-controller-pod
-          image: neuvector/controller.preview:5.0.0-preview.3
+          image: neuvector/controller.preview:5.0.0-preview.2
           securityContext:
             privileged: true
           readinessProbe:
@@ -158,7 +158,7 @@ spec:
               name: nv-share
               readOnly: false
             - mountPath: /var/run/docker.sock
-              name: docker-sock
+              name: runtime-sock
               readOnly: true
             - mountPath: /host/proc
               name: proc-vol
@@ -175,9 +175,9 @@ spec:
         - name: nv-share
           hostPath:
             path: /var/neuvector
-        - name: docker-sock
+        - name: runtime-sock
           hostPath:
-            path: /run/containerd/containerd.sock
+            path: /var/run/docker.sock
         - name: proc-vol
           hostPath:
             path: /proc
@@ -218,7 +218,7 @@ spec:
       hostPID: true
       containers:
         - name: neuvector-enforcer-pod
-          image: neuvector/enforcer.preview:5.0.0-preview.3
+          image: neuvector/enforcer.preview:5.0.0-preview.2
           securityContext:
             privileged: true
           env:
@@ -237,7 +237,7 @@ spec:
               name: modules-vol
               readOnly: true
             - mountPath: /var/run/docker.sock
-              name: docker-sock
+              name: runtime-sock
               readOnly: true
             - mountPath: /host/proc
               name: proc-vol
@@ -251,9 +251,9 @@ spec:
         - name: modules-vol
           hostPath:
             path: /lib/modules
-        - name: docker-sock
+        - name: runtime-sock
           hostPath:
-            path: /run/containerd/containerd.sock
+            path: /var/run/docker.sock
         - name: proc-vol
           hostPath:
             path: /proc

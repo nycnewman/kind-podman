@@ -4,6 +4,7 @@ set -e
 export KIND_EXPERIMENTAL_PROVIDER=podman
 
 kind create cluster --config=kind-cluster.yaml
+#minikube start --driver=podman --memory 24000 --cpus 6 --network-plugin=cni --addons dashboard --extra-config=kubeadm.pod-network-cidr=10.240.0.0/16
 
 PODS=`podman ps | grep -v NAMES | cut -d ' ' -f 1`
 IFS=$'\n' PODS=($PODS)
@@ -15,7 +16,7 @@ do
    podman cp config.json $i:/var/lib/kubelet/config.json
 done
 
-sleep 8
+#sleep 8
 
 # Install Calico
 kubectl create -f tigera-operator.yaml
@@ -34,6 +35,7 @@ sleep 40
 # Following needed in multi nodes configurations to allow istio-ingressgateway to start
 #kubectl taint nodes --all node-role.kubernetes.io/master-
 kubectl label node kind-worker ingress-ready=true
+#kubectl label node minikube ingress-ready=true
 
 # Install Istio
 istioctl x precheck
@@ -48,18 +50,17 @@ kubectl apply -f istio-1.13.2/samples/addons
 sleep 10 
 
 # Install Dashboard
-#kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/master/aio/deploy/recommended.yaml
 kubectl apply -f dashboard-recommended.yaml
 kubectl get pod -n kubernetes-dashboard
 sleep 10
-#kubectl create clusterrolebinding default-admin --clusterrole cluster-admin --serviceaccount=default:default
+kubectl create clusterrolebinding default-admin --clusterrole cluster-admin --serviceaccount=default:default
 kubectl apply -f dashboard-adminuser.yaml
 kubectl apply -f dashboard-clusterrolebinding.yaml
 
 # Metal LB
-#kubectl apply -f metallb-namespace.yaml
-#kubectl apply -f metallb.yaml
-#kubectl apply -f metallb-config.yaml
+kubectl apply -f metallb-namespace.yaml
+kubectl apply -f metallb.yaml
+kubectl apply -f metallb-config.yaml
 
 kubectl proxy &
 
@@ -104,7 +105,7 @@ curl -s -I -HHost:httpbin.example.com http://localhost:8080/test
 curl -s -I -HHost:httpbin.example.com http://localhost:8080/status/244
 curl -s -I -HHost:httpbin.example.com http://localhost:8080/delay/3
 
-#open http://localhost:8001/api/v1/namespaces/kubernetes-dashboard/services/https:kubernetes-dashboard:/proxy/
+open http://localhost:8001/api/v1/namespaces/kubernetes-dashboard/services/https:kubernetes-dashboard:/proxy/
 istioctl dashboard kiali &
 
 kubectl -n kubernetes-dashboard get secret $(kubectl -n kubernetes-dashboard get sa/admin-user -o jsonpath="{.secrets[0].name}") -o go-template="{{.data.token | base64decode}}"

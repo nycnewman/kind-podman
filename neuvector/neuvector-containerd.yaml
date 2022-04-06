@@ -1,5 +1,4 @@
 
-# neuvector yaml version for 5.x.x on docker runtime
 apiVersion: v1
 kind: Service
 metadata:
@@ -157,8 +156,8 @@ spec:
             - mountPath: /var/neuvector
               name: nv-share
               readOnly: false
-            - mountPath: /var/run/docker.sock
-              name: docker-sock
+            - mountPath: /run/containerd/containerd.sock
+              name: runtime-sock
               readOnly: true
             - mountPath: /host/proc
               name: proc-vol
@@ -175,7 +174,7 @@ spec:
         - name: nv-share
           hostPath:
             path: /var/neuvector
-        - name: docker-sock
+        - name: runtime-sock
           hostPath:
             path: /run/containerd/containerd.sock
         - name: proc-vol
@@ -236,8 +235,8 @@ spec:
             - mountPath: /lib/modules
               name: modules-vol
               readOnly: true
-            - mountPath: /var/run/docker.sock
-              name: docker-sock
+            - mountPath: /run/containerd/containerd.sock
+              name: runtime-sock
               readOnly: true
             - mountPath: /host/proc
               name: proc-vol
@@ -251,7 +250,7 @@ spec:
         - name: modules-vol
           hostPath:
             path: /lib/modules
-        - name: docker-sock
+        - name: runtime-sock
           hostPath:
             path: /run/containerd/containerd.sock
         - name: proc-vol
