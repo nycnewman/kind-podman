@@ -98,7 +98,7 @@ kubectl create -f httpbin-virtualservice.yaml
 #export TCP_INGRESS_PORT=$(kubectl -n istio-system get service istio-ingressgateway -o jsonpath='{.spec.ports[?(@.name=="tcp")].nodePort}')
 #export INGRESS_HOST=$(kubectl get po -l istio=ingressgateway -n istio-system -o jsonpath='{.items[0].status.hostIP}')
 
-sleep 30
+sleep 40
 
 curl -s -I -HHost:httpbin.example.com http://localhost:8080/status/200
 curl -s -I -HHost:httpbin.example.com http://localhost:8080/test

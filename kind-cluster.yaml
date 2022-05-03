@@ -19,7 +19,7 @@ nodes:
           node-labels: "ingress-ready=true"
     #- |
     #  kind: ClusterConfiguration
-    #    apiServer:
+    #  apiServer:
     #      extraArgs:
     #        audit-log-path: /etc/kubernetes/audit/audit.log
     #        audit-policy-file: /etc/kubernetes/audit/audit-policy.yaml
@@ -29,7 +29,7 @@ nodes:
     #          mountPath: /etc/kubernetes/audit
     #          readOnly: false
     #          pathType: "DirectoryOrCreate"
-    extraMounts:
+    #extraMounts:
     #- hostPath: /tmp/api/
     #  containerPath: /etc/kubernetes/audit
     #  readOnly: false
