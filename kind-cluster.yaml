@@ -60,12 +60,12 @@ nodes:
         hostPort: 8444
         listenAddress: "127.0.0.1"
         protocol: TCP
-  - role: worker
-    # This appears to not work so have to set label manually
-    kubeadmConfigPatches:
-      - |
-        kind: InitConfiguration
-        nodeRegistration:
-          kubeletExtraArgs:
-            node-labels: "ingress-ready=true"
-  - role: worker
+  #- role: worker
+  #  # This appears to not work so have to set label manually
+  #  kubeadmConfigPatches:
+  #    - |
+  #      kind: InitConfiguration
+  #      nodeRegistration:
+  #        kubeletExtraArgs:
+  #          node-labels: "ingress-ready=true"
+  #- role: worker

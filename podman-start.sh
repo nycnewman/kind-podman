@@ -1,6 +1,6 @@
 #!/bin/bash
 
-podman machine init --rootful --cpus 6 --memory 25000 --disk-size 100
+podman machine init --rootful --cpus 10 --memory 27000 --disk-size 70
 podman machine start
 
 podman machine ssh sudo touch /etc/sysctl.d/50-kind.conf

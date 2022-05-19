@@ -4,7 +4,6 @@ set -e
 export KIND_EXPERIMENTAL_PROVIDER=podman
 
 kind create cluster --config=kind-cluster.yaml
-#minikube start --driver=podman --memory 24000 --cpus 6 --network-plugin=cni --addons dashboard --extra-config=kubeadm.pod-network-cidr=10.240.0.0/16
 
 PODS=`podman ps | grep -v NAMES | cut -d ' ' -f 1`
 IFS=$'\n' PODS=($PODS)
@@ -34,18 +33,18 @@ sleep 40
 
 # Following needed in multi nodes configurations to allow istio-ingressgateway to start
 #kubectl taint nodes --all node-role.kubernetes.io/master-
-kubectl label node kind-worker ingress-ready=true
-#kubectl label node minikube ingress-ready=true
+
+#kubectl label node kind-worker ingress-ready=true
 
 # Install Istio
 istioctl x precheck
-istioctl install --set profile=demo --set hub=docker.io/querycapistio -y -f install-istio.yaml
+istioctl install --set profile=empty --set hub=docker.io/querycapistio -y -f install-istio.yaml
 sleep 10
 
 #istioctl install --set profile=demo -y
 kubectl label namespace default istio-injection=enabled
 istioctl analyze
-kubectl apply -f istio-1.13.2/samples/addons
+kubectl apply -f istio-1.13.3/samples/addons
 
 sleep 10 
 
@@ -56,11 +55,13 @@ sleep 10
 kubectl create clusterrolebinding default-admin --clusterrole cluster-admin --serviceaccount=default:default
 kubectl apply -f dashboard-adminuser.yaml
 kubectl apply -f dashboard-clusterrolebinding.yaml
+kubectl -n kubernetes-dashboard create token admin-user
+
 
 # Metal LB
-kubectl apply -f metallb-namespace.yaml
-kubectl apply -f metallb.yaml
-kubectl apply -f metallb-config.yaml
+#kubectl apply -f metallb-namespace.yaml
+#kubectl apply -f metallb.yaml
+#kubectl apply -f metallb-config.yaml
 
 kubectl proxy &
 
@@ -77,14 +78,6 @@ kubectl proxy &
 #kubectl create -f kyverno-install.yaml
 #kubectl patch mutatingwebhookconfigurations kyverno-resource-mutating-webhook-cfg \\n--type json \\n-p='[{"op": "replace", "path": "/webhooks/0/failurePolicy", "value": "Ignore"},{"op": "replace", "path": "/webhooks/0/timeoutSeconds", "value": 15}]'
 #kubectl apply -f kyverno-verify.yaml
-
-# Neuvector
-#kubectl create namespace neuvector
-#kubectl create -f nv_psp.yaml
-#kubectl apply -f crd-k8s-1.19.yaml
-#kubectl create -f neuvector.yaml
-#kubectl get svc -n neuvector
-
 
 # Install HTTPbin example
 kubectl config set-context --current --namespace default
