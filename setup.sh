@@ -38,13 +38,13 @@ sleep 40
 
 # Install Istio
 istioctl x precheck
-istioctl install --set profile=empty --set hub=docker.io/querycapistio -y -f install-istio.yaml
+istioctl install --set profile=empty --set hub=ghcr.io/resf/istio -y -f install-istio.yaml
 sleep 10
 
 #istioctl install --set profile=demo -y
 kubectl label namespace default istio-injection=enabled
 istioctl analyze
-kubectl apply -f istio-1.13.3/samples/addons
+kubectl apply -f istio-1.13.4/samples/addons
 
 sleep 10 
 

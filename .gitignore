@@ -10,7 +10,7 @@ dist/
 *.swp
 .vscode/
 config.json
-istio-1.13.2
+istio-1.13.*
 cosign.*
 distroless.key
 .idea
