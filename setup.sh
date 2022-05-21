@@ -44,7 +44,14 @@ sleep 10
 #istioctl install --set profile=demo -y
 kubectl label namespace default istio-injection=enabled
 istioctl analyze
-kubectl apply -f istio-1.13.4/samples/addons
+#kubectl apply -f istio-1.13.4/samples/addons
+kubectl apply -f kiali-adminuser.yaml
+kubectl apply -f kiali-clusterrolebinding.yaml
+kubectl apply -f kiali.yaml
+kubectl apply -f prometheus.yaml
+kubectl apply -f jaeger.yaml
+kubectl apply -f grafana.yaml
+
 
 sleep 10 
 
@@ -55,7 +62,7 @@ sleep 10
 kubectl create clusterrolebinding default-admin --clusterrole cluster-admin --serviceaccount=default:default
 kubectl apply -f dashboard-adminuser.yaml
 kubectl apply -f dashboard-clusterrolebinding.yaml
-kubectl -n kubernetes-dashboard create token admin-user
+#kubectl -n kubernetes-dashboard create token admin-user
 
 
 # Metal LB
@@ -101,6 +108,13 @@ curl -s -I -HHost:httpbin.example.com http://localhost:8080/delay/3
 open http://localhost:8001/api/v1/namespaces/kubernetes-dashboard/services/https:kubernetes-dashboard:/proxy/
 istioctl dashboard kiali &
 
-kubectl -n kubernetes-dashboard get secret $(kubectl -n kubernetes-dashboard get sa/admin-user -o jsonpath="{.secrets[0].name}") -o go-template="{{.data.token | base64decode}}"
+#kubectl -n kubernetes-dashboard get secret $(kubectl -n kubernetes-dashboard get sa/admin-user -o jsonpath="{.secrets[0].name}") -o go-template="{{.data.token | base64decode}}"
+
+echo "Dashboard"
+kubectl -n kubernetes-dashboard create token admin-user
+
+echo "Istio Kiali"
+kubectl -n istio-system create token admin-user
+
 echo ""
 
