@@ -3,7 +3,7 @@
 set -e
 export KIND_EXPERIMENTAL_PROVIDER=podman
 
-kind create cluster --config=kind-cluster.yaml
+kind create cluster -v1 --config=kind-cluster.yaml
 
 PODS=`podman ps | grep -v NAMES | cut -d ' ' -f 1`
 IFS=$'\n' PODS=($PODS)
@@ -27,7 +27,7 @@ sleep 40
 #kubectl get pods -n calico-system
 
 #kubectl -n kube-system rollout restart deployment coredns
-#kubectl scale deployment --replicas 1 coredns --namespace kube-system
+kubectl scale deployment --replicas 1 coredns --namespace kube-system
 
 #kubectl get all -A
 
@@ -80,6 +80,8 @@ kubectl proxy &
 #--set extraArgs.kubelet-insecure-tls=true \
 #--set extraArgs.kubelet-preferred-address-types=InternalIP \
 #bitnami/metrics-server --namespace kube-system
+
+kubectl apply -f metrics-server.yaml
 
 # Kiverno
 #kubectl create -f kyverno-install.yaml
