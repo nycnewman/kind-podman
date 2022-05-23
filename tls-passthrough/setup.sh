@@ -18,6 +18,9 @@ kubectl exec "$(kubectl get pod  -l run=my-nginx -o jsonpath={.items..metadata.n
 kubectl apply -f nginx-gateway.yaml
 kubectl apply -f nginx-virtualservice.yaml
 
+
+sleep 20
+
 curl -v --resolve "nginx.example.com:8443:127.0.0.1" --cacert example.com.crt -HHost:nginx.example.com "https://nginx.example.com:8443"
 echo "" | openssl s_client -host 127.0.0.1 -port 8443 -servername nginx.example.com -tls1_2 -tlsextdebug -status -CAfile example.com.crt
 
@@ -37,6 +40,8 @@ kubectl exec "$(kubectl get pod  -l run=my-nginx2 -o jsonpath={.items..metadata.
 
 kubectl apply -f nginx-gateway2.yaml
 kubectl apply -f nginx-virtualservice2.yaml
+
+sleep 20
 
 curl -v --resolve "nginx2.example.com:8443:127.0.0.1" --cacert example.com.crt -HHost:nginx2.example.com "https://nginx2.example.com:8443"
 echo "" | openssl s_client -host 127.0.0.1 -port 8443 -servername nginx2.example.com -tls1_2 -tlsextdebug -status -CAfile example.com.crt
