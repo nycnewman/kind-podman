@@ -1,7 +1,7 @@
 #!/bin/bash
 
 set -e
-#export KIND_EXPERIMENTAL_PROVIDER=podman
+export KIND_EXPERIMENTAL_PROVIDER=podman
 
 kind create cluster -v1 --config=kind-cluster.yaml
 
